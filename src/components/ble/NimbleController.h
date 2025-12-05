@@ -18,6 +18,7 @@
 #include "components/ble/HeartRateService.h"
 #include "components/ble/ImmediateAlertService.h"
 #include "components/ble/MusicService.h"
+#include "components/ble/RemoteControlService.h"
 #include "components/ble/NavigationService.h"
 #include "components/ble/ServiceDiscovery.h"
 #include "components/ble/MotionService.h"
@@ -58,7 +59,9 @@ namespace Pinetime {
       Pinetime::Controllers::MusicService& music() {
         return musicService;
       };
-
+      Pinetime::Controllers::RemoteControlService& remoteControl() {
+        return remoteControlService;
+      };
       Pinetime::Controllers::NavigationService& navigation() {
         return navService;
       };
@@ -85,7 +88,7 @@ namespace Pinetime {
       void PersistBond(struct ble_gap_conn_desc& desc);
       void RestoreBond();
 
-      static constexpr const char* deviceName = "InfiniTime";
+      static constexpr const char* deviceName = "LassiBLEHero";
       Pinetime::System::SystemTask& systemTask;
       Ble& bleController;
       DateTime& dateTimeController;
@@ -100,6 +103,7 @@ namespace Pinetime {
       CurrentTimeService currentTimeService;
       MusicService musicService;
       SimpleWeatherService weatherService;
+      RemoteControlService remoteControlService;
       NavigationService navService;
       BatteryInformationService batteryInformationService;
       ImmediateAlertService immediateAlertService;

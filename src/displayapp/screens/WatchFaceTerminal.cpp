@@ -29,7 +29,7 @@ WatchFaceTerminal::WatchFaceTerminal(Controllers::DateTime& dateTimeController,
     motionController {motionController} {
   batteryValue = lv_label_create(lv_scr_act(), nullptr);
   lv_label_set_recolor(batteryValue, true);
-  lv_obj_align(batteryValue, lv_scr_act(), LV_ALIGN_IN_LEFT_MID, 0, -20);
+  lv_obj_align(batteryValue, lv_scr_act(), LV_ALIGN_IN_LEFT_MID, 0, 20);
 
   connectState = lv_label_create(lv_scr_act(), nullptr);
   lv_label_set_recolor(connectState, true);
@@ -40,27 +40,38 @@ WatchFaceTerminal::WatchFaceTerminal(Controllers::DateTime& dateTimeController,
 
   label_date = lv_label_create(lv_scr_act(), nullptr);
   lv_label_set_recolor(label_date, true);
-  lv_obj_align(label_date, lv_scr_act(), LV_ALIGN_IN_LEFT_MID, 0, -40);
+  lv_obj_align(label_date, lv_scr_act(), LV_ALIGN_IN_LEFT_MID, 0, 0);
 
   label_prompt_1 = lv_label_create(lv_scr_act(), nullptr);
-  lv_obj_align(label_prompt_1, lv_scr_act(), LV_ALIGN_IN_LEFT_MID, 0, -80);
-  lv_label_set_text_static(label_prompt_1, "user@watch:~ $ now");
+  lv_label_set_text(label_prompt_1, "s7arbuck");
+  lv_obj_align(label_prompt_1, lv_scr_act(), LV_ALIGN_CENTER, 0, -100);
 
-  label_prompt_2 = lv_label_create(lv_scr_act(), nullptr);
-  lv_obj_align(label_prompt_2, lv_scr_act(), LV_ALIGN_IN_LEFT_MID, 0, 60);
-  lv_label_set_text_static(label_prompt_2, "user@watch:~ $");
+  //label_prompt_2 = lv_label_create(lv_scr_act(), nullptr);
+  //lv_obj_align(label_prompt_2, lv_scr_act(), LV_ALIGN_IN_LEFT_MID, 0, 60);
+  //lv_label_set_text(label_prompt_2, "user@watch:~ $");
 
   label_time = lv_label_create(lv_scr_act(), nullptr);
+  lv_obj_set_style_local_text_font(label_time, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, &jetbrains_mono_42);
   lv_label_set_recolor(label_time, true);
-  lv_obj_align(label_time, lv_scr_act(), LV_ALIGN_IN_LEFT_MID, 0, -60);
+  lv_label_set_text(label_time, "00:00:00");
+  lv_obj_align(label_time, lv_scr_act(), LV_ALIGN_CENTER, 0, -50);
 
-  heartbeatValue = lv_label_create(lv_scr_act(), nullptr);
-  lv_label_set_recolor(heartbeatValue, true);
-  lv_obj_align(heartbeatValue, lv_scr_act(), LV_ALIGN_IN_LEFT_MID, 0, 20);
+  backgroundLabel = lv_label_create(lv_scr_act(), nullptr);
+  lv_obj_set_click(backgroundLabel, true);
+  lv_label_set_long_mode(backgroundLabel, LV_LABEL_LONG_CROP);
+  lv_obj_set_size(backgroundLabel, 240, 240);
+  lv_obj_set_pos(backgroundLabel, 0, 0);
+  lv_label_set_text(backgroundLabel, "");
 
-  stepValue = lv_label_create(lv_scr_act(), nullptr);
-  lv_label_set_recolor(stepValue, true);
-  lv_obj_align(stepValue, lv_scr_act(), LV_ALIGN_IN_LEFT_MID, 0, 0);
+  // heartbeatValue = lv_label_create(lv_scr_act(), nullptr);
+  // lv_label_set_recolor(heartbeatValue, true);
+  // lv_label_set_text(heartbeatValue, "[L_HR]#ee3311 0 bpm#");
+  // lv_obj_align(heartbeatValue, lv_scr_act(), LV_ALIGN_IN_LEFT_MID, 0, 20);
+
+  // stepValue = lv_label_create(lv_scr_act(), nullptr);
+  // lv_label_set_recolor(stepValue, true);
+  // lv_label_set_text(stepValue, "[STEP]#ee3377 0 steps#");
+  // lv_obj_align(stepValue, lv_scr_act(), LV_ALIGN_IN_LEFT_MID, 0, 0);
 
   taskRefresh = lv_task_create(RefreshTaskCallback, LV_DISP_DEF_REFR_PERIOD, LV_TASK_PRIO_MID, this);
   Refresh();
@@ -75,7 +86,9 @@ void WatchFaceTerminal::Refresh() {
   powerPresent = batteryController.IsPowerPresent();
   batteryPercentRemaining = batteryController.PercentRemaining();
   if (batteryPercentRemaining.IsUpdated() || powerPresent.IsUpdated()) {
-    lv_label_set_text_fmt(batteryValue, "[BATT]#387b54 %d%%", batteryPercentRemaining.Get());
+    auto batteryPercent = batteryPercentRemaining.Get();
+    lv_label_set_text(batteryIcon, BatteryIcon::GetBatteryIcon(batteryPercent));
+    lv_label_set_text_fmt(batteryValue, "[BATT]#ee3377 %d%%", batteryPercent);
     if (batteryController.IsPowerPresent()) {
       lv_label_ins_text(batteryValue, LV_LABEL_POS_LAST, " Charging");
     }
@@ -120,9 +133,9 @@ void WatchFaceTerminal::Refresh() {
         hour = hour - 12;
         ampmChar[0] = 'P';
       }
-      lv_label_set_text_fmt(label_time, "[TIME]#11cc55 %02d:%02d:%02d %s#", hour, minute, second, ampmChar);
+      lv_label_set_text_fmt(label_time, "#11cc55 %02d:%02d:%02d %s#", hour, minute, second, ampmChar);
     } else {
-      lv_label_set_text_fmt(label_time, "[TIME]#11cc55 %02d:%02d:%02d", hour, minute, second);
+      lv_label_set_text_fmt(label_time, "#11cc55 %02d:%02d:%02d#", hour, minute, second);
     }
 
     currentDate = std::chrono::time_point_cast<std::chrono::days>(currentDateTime.Get());
@@ -134,18 +147,19 @@ void WatchFaceTerminal::Refresh() {
     }
   }
 
-  heartbeat = heartRateController.HeartRate();
-  heartbeatRunning = heartRateController.State() != Controllers::HeartRateController::States::Stopped;
-  if (heartbeat.IsUpdated() || heartbeatRunning.IsUpdated()) {
-    if (heartbeatRunning.Get()) {
-      lv_label_set_text_fmt(heartbeatValue, "[L_HR]#ee3311 %d bpm#", heartbeat.Get());
-    } else {
-      lv_label_set_text_static(heartbeatValue, "[L_HR]#ee3311 ---#");
-    }
-  }
+  // heartbeat = heartRateController.HeartRate();
+  // heartbeatRunning = heartRateController.State() != Controllers::HeartRateController::States::Stopped;
+  // if (heartbeat.IsUpdated() || heartbeatRunning.IsUpdated()) {
+  //   if (heartbeatRunning.Get()) {
+  //     lv_label_set_text_fmt(heartbeatValue, "[L_HR]#ee3311 %d bpm#", heartbeat.Get());
+  //   } else {
+  //     lv_label_set_text_static(heartbeatValue, "[L_HR]#ee3311 ---#");
+  //   }
+  // }
 
-  stepCount = motionController.NbSteps();
-  if (stepCount.IsUpdated()) {
-    lv_label_set_text_fmt(stepValue, "[STEP]#ee3377 %lu steps#", stepCount.Get());
-  }
+  // stepCount = motionController.NbSteps();
+  // motionSensorOk = motionController.IsSensorOk();
+  // if (stepCount.IsUpdated() || motionSensorOk.IsUpdated()) {
+  //   lv_label_set_text_fmt(stepValue, "[STEP]#ee3377 %lu steps#", stepCount.Get());
+  // }
 }

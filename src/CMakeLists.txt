@@ -403,6 +403,8 @@ list(APPEND SOURCE_FILES
         displayapp/widgets/PageIndicator.cpp
         displayapp/widgets/DotIndicator.cpp
         displayapp/widgets/StatusIcons.cpp
+        # My App
+        displayapp/screens/MyApp.cpp
 
         ## Settings
         displayapp/screens/settings/QuickSettings.cpp
@@ -459,6 +461,7 @@ list(APPEND SOURCE_FILES
         components/ble/AlertNotificationService.cpp
         components/ble/MusicService.cpp
         components/ble/SimpleWeatherService.cpp
+        components/ble/RemoteControlService.cpp
         components/ble/NavigationService.cpp
         components/ble/BatteryInformationService.cpp
         components/ble/FSService.cpp
@@ -530,6 +533,7 @@ list(APPEND RECOVERY_SOURCE_FILES
         components/ble/AlertNotificationService.cpp
         components/ble/MusicService.cpp
         components/ble/SimpleWeatherService.cpp
+        components/ble/RemoteControlService.cpp
         components/ble/BatteryInformationService.cpp
         components/ble/FSService.cpp
         components/ble/ImmediateAlertService.cpp
@@ -615,6 +619,8 @@ set(INCLUDE_FILES
         displayapp/screens/Notifications.h
         displayapp/screens/HeartRate.h
         displayapp/screens/Metronome.h
+        # My App
+        displayapp/screens/MyApp.h
         displayapp/screens/Motion.h
         displayapp/screens/Timer.h
         displayapp/screens/Dice.h
