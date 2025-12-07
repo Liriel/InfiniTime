@@ -6,6 +6,7 @@
 #include "displayapp/screens/Screen.h"
 #include "displayapp/apps/Apps.h"
 #include "displayapp/Controllers.h"
+#include "systemtask/SystemTask.h"
 
 namespace Pinetime {
   namespace Controllers {

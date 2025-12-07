@@ -87,7 +87,7 @@ void WatchFaceTerminal::Refresh() {
   batteryPercentRemaining = batteryController.PercentRemaining();
   if (batteryPercentRemaining.IsUpdated() || powerPresent.IsUpdated()) {
     auto batteryPercent = batteryPercentRemaining.Get();
-    lv_label_set_text(batteryIcon, BatteryIcon::GetBatteryIcon(batteryPercent));
+    // lv_label_set_text(batteryIcon, BatteryIcon::GetBatteryIcon(batteryPercent));
     lv_label_set_text_fmt(batteryValue, "[BATT]#ee3377 %d%%", batteryPercent);
     if (batteryController.IsPowerPresent()) {
       lv_label_ins_text(batteryValue, LV_LABEL_POS_LAST, " Charging");

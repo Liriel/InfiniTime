@@ -34,9 +34,9 @@ namespace {
 
   constexpr ble_uuid128_t msUuid {BaseUuid()};
 
-  constexpr ble_uuid128_t msSliderEventCharUuid {CharUuid(0x01, 0x00)};
-  constexpr ble_uuid128_t msButtonEventCharUuid {CharUuid(0x02, 0x00)};
-  constexpr ble_uuid128_t msStatusCharUuid {CharUuid(0x03, 0x00)};
+  constexpr ble_uuid128_t msSliderEventCharUuid {CharUuid(0x00, 0x01)};
+  constexpr ble_uuid128_t msButtonEventCharUuid {CharUuid(0x00, 0x02)};
+  constexpr ble_uuid128_t msStatusCharUuid {CharUuid(0x00, 0x03)};
 
   int RemoteControlCallback(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt* ctxt, void* arg) {
     return static_cast<Pinetime::Controllers::RemoteControlService*>(arg)->OnCommand(conn_handle, attr_handle, ctxt);
@@ -47,12 +47,12 @@ Pinetime::Controllers::RemoteControlService::RemoteControlService(Pinetime::Syst
   characteristicDefinition[0] = {.uuid = &msSliderEventCharUuid.u,
                                  .access_cb = RemoteControlCallback,
                                  .arg = this,
-                                 .flags = BLE_GATT_CHR_F_NOTIFY,
+                                 .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_NOTIFY,
                                  .val_handle = &sliderEventHandle};
   characteristicDefinition[1] = {.uuid = &msButtonEventCharUuid.u,
                                  .access_cb = RemoteControlCallback,
                                  .arg = this,
-                                 .flags = BLE_GATT_CHR_F_NOTIFY,
+                                 .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_NOTIFY,
                                  .val_handle = &buttonEventHandle};
   characteristicDefinition[2] = {.uuid = &msStatusCharUuid.u,
                                  .access_cb = RemoteControlCallback,
@@ -74,7 +74,7 @@ void Pinetime::Controllers::RemoteControlService::Init() {
   ASSERT(res == 0);
 }
 
-int Pinetime::Controllers::RemoteControlService::OnCommand(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt* ctxt) {
+int Pinetime::Controllers::RemoteControlService::OnCommand(uint16_t /*conn_handle*/, uint16_t /*attr_handle*/, struct ble_gatt_access_ctxt* ctxt) {
   if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR) {
     size_t notifSize = OS_MBUF_PKTLEN(ctxt->om);
     char data[notifSize + 1];
@@ -83,6 +83,20 @@ int Pinetime::Controllers::RemoteControlService::OnCommand(uint16_t conn_handle,
     char* s = &data[0];
     if (ble_uuid_cmp(ctxt->chr->uuid, &msStatusCharUuid.u) == 0) {
       status = s;
+    }
+  } else if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR) {
+    // Handle READ operations for notify characteristics
+    if (ble_uuid_cmp(ctxt->chr->uuid, &msSliderEventCharUuid.u) == 0) {
+      uint8_t val = static_cast<uint8_t>(sliderValue);
+      int res = os_mbuf_append(ctxt->om, &val, 1);
+      return (res == 0) ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
+    } else if (ble_uuid_cmp(ctxt->chr->uuid, &msButtonEventCharUuid.u) == 0) {
+      uint8_t val = 0; // No stored button state
+      int res = os_mbuf_append(ctxt->om, &val, 1);
+      return (res == 0) ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
+    } else if (ble_uuid_cmp(ctxt->chr->uuid, &msStatusCharUuid.u) == 0) {
+      int res = os_mbuf_append(ctxt->om, status.c_str(), status.length());
+      return (res == 0) ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
     }
   }
   return 0;
