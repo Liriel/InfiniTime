@@ -41,6 +41,7 @@ namespace Pinetime {
 
       const char* ButtonEvent(const uint8_t* event);
       const char* SliderEvent(const uint8_t* event);
+      const char* DeviceEvent(const uint8_t* data, size_t len);
 
       std::string getStatus() const;
 

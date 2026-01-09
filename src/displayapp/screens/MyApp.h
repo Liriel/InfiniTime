@@ -1,9 +1,8 @@
 #pragma once
 
-#include <FreeRTOS.h>
-#include <lvgl/src/lv_core/lv_obj.h>
-#include <string>
+#include <memory>
 #include "displayapp/screens/Screen.h"
+#include "displayapp/screens/ScreenList.h"
 #include "displayapp/apps/Apps.h"
 #include "displayapp/Controllers.h"
 #include "systemtask/SystemTask.h"
@@ -14,19 +13,23 @@ namespace Pinetime {
   }
 
   namespace Applications {
+    class DisplayApp;
+
     namespace Screens {
       class MyApp : public Screen {
       public:
-        MyApp(Pinetime::Controllers::RemoteControlService& remoteControl);
+        MyApp(DisplayApp* app, Pinetime::Controllers::RemoteControlService& remoteControl);
         ~MyApp() override;
-        void OnObjectEvent(lv_obj_t* obj, lv_event_t event);
+        bool OnTouchEvent(TouchEvents event) override;
+
       private:
-        lv_obj_t* slider;
-        lv_obj_t* btnVolDown;
-        lv_obj_t* btnlabel;
-        lv_obj_t* label;
-        lv_obj_t* title;
+        DisplayApp* app;
         Pinetime::Controllers::RemoteControlService& remoteControlService;
+        ScreenList<3> screens;
+
+        std::unique_ptr<Screen> CreateDoorScreen();
+        std::unique_ptr<Screen> CreateLivingRoomScreen();
+        std::unique_ptr<Screen> CreateSofaScreen();
       };
     }
 
@@ -36,7 +39,8 @@ namespace Pinetime {
       static constexpr const char* icon = "M";
 
       static Screens::Screen* Create(AppControllers& controllers) {
-        return new Screens::MyApp(controllers.systemTask->nimble().remoteControl());
+        return new Screens::MyApp(controllers.displayApp, 
+                                   controllers.systemTask->nimble().remoteControl());
       };
 
       static bool IsAvailable(Pinetime::Controllers::FS& /*filesystem*/) {

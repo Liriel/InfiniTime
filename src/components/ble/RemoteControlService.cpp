@@ -143,3 +143,16 @@ const char* Pinetime::Controllers::RemoteControlService::SliderEvent(const uint8
   ble_gattc_notify_custom(connectionHandle, sliderEventHandle, om);
   return "done";
 }
+
+const char* Pinetime::Controllers::RemoteControlService::DeviceEvent(const uint8_t* data, size_t len) {
+  auto* om = ble_hs_mbuf_from_flat(data, len);
+
+  uint16_t connectionHandle = m_system.nimble().connHandle();
+
+  if (connectionHandle == 0 || connectionHandle == BLE_HS_CONN_HANDLE_NONE) {
+    return "no conn";
+  }
+
+  ble_gattc_notify_custom(connectionHandle, sliderEventHandle, om);
+  return "done";
+}

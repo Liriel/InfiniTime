@@ -405,6 +405,9 @@ list(APPEND SOURCE_FILES
         displayapp/widgets/StatusIcons.cpp
         # My App
         displayapp/screens/MyApp.cpp
+        displayapp/screens/MyAppLivingRoom.cpp
+        displayapp/screens/MyAppDoor.cpp
+        displayapp/screens/MyAppSofa.cpp
 
         ## Settings
         displayapp/screens/settings/QuickSettings.cpp
@@ -621,6 +624,10 @@ set(INCLUDE_FILES
         displayapp/screens/Metronome.h
         # My App
         displayapp/screens/MyApp.h
+        displayapp/screens/HomeControl.h
+        displayapp/screens/DoorControl.h
+        displayapp/screens/LivingRoomControl.h
+        displayapp/screens/SofaControl.h
         displayapp/screens/Motion.h
         displayapp/screens/Timer.h
         displayapp/screens/Dice.h

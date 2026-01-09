@@ -1,50 +1,45 @@
 #include "displayapp/screens/MyApp.h"
-#include <cstdint>
-#include "components/ble/RemoteControlService.h"
+#include "displayapp/screens/MyAppDoor.h"
+#include "displayapp/screens/MyAppLivingRoom.h"
+#include "displayapp/screens/MyAppSofa.h"
+#include "displayapp/DisplayApp.h"
 
 using namespace Pinetime::Applications::Screens;
 
-static void event_handler(lv_obj_t* obj, lv_event_t event) {
-  MyApp* screen = static_cast<MyApp*>(obj->user_data);
-  screen->OnObjectEvent(obj, event);
-}
-
-MyApp::MyApp(Pinetime::Controllers::RemoteControlService& remoteControl) : remoteControlService(remoteControl) {
-  /* title */
-  title = lv_label_create(lv_scr_act(), nullptr);
-  lv_label_set_text(title, "BLE Remote");
-  lv_obj_align(title, NULL, LV_ALIGN_IN_TOP_LEFT, 10, 10);
-
-  slider = lv_slider_create(lv_scr_act(), nullptr);
-  slider->user_data = this;
-  lv_obj_set_width(slider, (LV_DPI * 2) - 6);
-  lv_obj_align(slider, lv_scr_act(), LV_ALIGN_CENTER, 0, 70);
-  lv_obj_set_event_cb(slider, event_handler);
-  lv_slider_set_range(slider, 0, 100);
-
-  btnVolDown = lv_btn_create(lv_scr_act(), nullptr);
-  btnVolDown->user_data = this;
-  lv_obj_set_event_cb(btnVolDown, event_handler);
-  lv_obj_set_size(btnVolDown, 76, 76);
-  lv_obj_align(btnVolDown, lv_scr_act(), LV_ALIGN_CENTER, 0, -20);
-  btnlabel = lv_label_create(btnVolDown, nullptr);
-  lv_label_set_text(btnlabel, "Send!");
+MyApp::MyApp(DisplayApp* app, Pinetime::Controllers::RemoteControlService& remoteControl)
+  : app {app},
+    remoteControlService {remoteControl},
+    screens {app,
+             0,
+             {[this]() -> std::unique_ptr<Screen> {
+                return CreateDoorScreen();
+              },
+              [this]() -> std::unique_ptr<Screen> {
+                return CreateLivingRoomScreen();
+              },
+              [this]() -> std::unique_ptr<Screen> {
+                return CreateSofaScreen();
+              }},
+             ScreenListModes::UpDown} {
 }
 
 MyApp::~MyApp() {
   lv_obj_clean(lv_scr_act());
 }
 
-void MyApp::OnObjectEvent(lv_obj_t* obj, lv_event_t event) {
-  if (event == LV_EVENT_CLICKED && obj == btnVolDown) {
-    const uint8_t val = 5;
-    const char* msg = remoteControlService.ButtonEvent(&val);
-    lv_label_set_text(title, msg);
-  }
-  else if(event == LV_EVENT_VALUE_CHANGED && obj == slider) {
-    uint8_t val = lv_slider_get_value(slider);
-    lv_label_set_text_fmt(title, "Slider: %03d", val);
-    remoteControlService.SliderEvent(&val);
-  }
+bool MyApp::OnTouchEvent(TouchEvents event) {
+  return screens.OnTouchEvent(event);
+}
+
+std::unique_ptr<Screen> MyApp::CreateDoorScreen() {
+  return std::make_unique<MyAppDoor>(remoteControlService);
+}
+
+std::unique_ptr<Screen> MyApp::CreateLivingRoomScreen() {
+  return std::make_unique<MyAppLivingRoom>(remoteControlService);
+}
+
+std::unique_ptr<Screen> MyApp::CreateSofaScreen() {
+  return std::make_unique<MyAppSofa>(remoteControlService);
 }
 

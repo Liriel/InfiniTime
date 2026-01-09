@@ -22,12 +22,23 @@ DBUS_PROP_IFACE =    'org.freedesktop.DBus.Properties'
 GATT_SERVICE_IFACE = 'org.bluez.GattService1'
 GATT_CHRC_IFACE =    'org.bluez.GattCharacteristic1'
 
-SVC_UUID = '00000000-78fc-48fe-8e23-433b3a1942d0'
-BTN_UUID = '00000001-78fc-48fe-8e23-433b3a1942d0'
+SVC_UUID = '00060000-78fc-48fe-8e23-433b3a1942d0'
+BTN_UUID = '00060200-78fc-48fe-8e23-433b3a1942d0'
+SLD_UUID = '00060100-78fc-48fe-8e23-433b3a1942d0'
 
 # The objects that we interact with.
 hr_service = None
 btn_chrc = None
+sld_chrc = None
+
+# Device names for pretty printing
+DEVICE_NAMES = {
+    0x01: "Door",
+    0x02: "Living Room Lamp 1",
+    0x03: "Living Room Lamp 2",
+    0x04: "Sofa Lamp 1",
+    0x05: "Sofa Lamp 2"
+}
 
 # define CTRL+C signal handler
 def signal_handler(signal, frame):
@@ -71,23 +82,39 @@ def hr_msrmt_changed_cb(iface, changed_props, invalidated_props):
     if not value:
         return
 
-    print('ping')
-    for v in value:
-        print("%x" % v)
+    # Parse 2-byte format: [device_id, value]
+    if len(value) >= 2:
+        device_id = value[0]
+        device_value = value[1]
+        device_name = DEVICE_NAMES.get(device_id, f"Unknown Device 0x{device_id:02x}")
+        print(f"{device_name}: {device_value}")
+    elif len(value) == 1:
+        # Legacy single-byte format
+        print(f"Value: {value[0]}")
+    else:
+        print('Notification received:')
+        for v in value:
+            print("  %02x" % v)
 
 
 def start_client():
 
-    # Listen to PropertiesChanged signals from the Heart Measurement
-    # Characteristic.
-    hr_msrmt_prop_iface = dbus.Interface(btn_chrc[0], DBUS_PROP_IFACE)
-    hr_msrmt_prop_iface.connect_to_signal("PropertiesChanged",
-                                         hr_msrmt_changed_cb)
+    # Listen to PropertiesChanged signals from both characteristics
+    if btn_chrc:
+        btn_prop_iface = dbus.Interface(btn_chrc[0], DBUS_PROP_IFACE)
+        btn_prop_iface.connect_to_signal("PropertiesChanged", hr_msrmt_changed_cb)
+        btn_chrc[0].StartNotify(reply_handler=hr_msrmt_start_notify_cb,
+                                error_handler=generic_error_cb,
+                                dbus_interface=GATT_CHRC_IFACE)
+        print("Subscribed to Button Events")
 
-    # Subscribe to Heart Rate Measurement notifications.
-    btn_chrc[0].StartNotify(reply_handler=hr_msrmt_start_notify_cb,
-                                 error_handler=generic_error_cb,
-                                 dbus_interface=GATT_CHRC_IFACE)
+    if sld_chrc:
+        sld_prop_iface = dbus.Interface(sld_chrc[0], DBUS_PROP_IFACE)
+        sld_prop_iface.connect_to_signal("PropertiesChanged", hr_msrmt_changed_cb)
+        sld_chrc[0].StartNotify(reply_handler=hr_msrmt_start_notify_cb,
+                                error_handler=generic_error_cb,
+                                dbus_interface=GATT_CHRC_IFACE)
+        print("Subscribed to Slider Events")
 
 
 def process_chrc(chrc_path):
@@ -100,7 +127,11 @@ def process_chrc(chrc_path):
     if uuid == BTN_UUID:
         global btn_chrc
         btn_chrc = (chrc, chrc_props)
-        print('Characteristic found: ' + uuid)
+        print('Button Characteristic found: ' + uuid)
+    elif uuid == SLD_UUID:
+        global sld_chrc
+        sld_chrc = (chrc, chrc_props)
+        print('Slider Characteristic found: ' + uuid)
 
     return True
 
@@ -171,7 +202,11 @@ def main():
             break
 
     if not hr_service:
-        print('No Heart Rate Service found')
+        print('No Remote Control Service found')
+        sys.exit(1)
+
+    if not btn_chrc and not sld_chrc:
+        print('No characteristics found')
         sys.exit(1)
 
     global dev 

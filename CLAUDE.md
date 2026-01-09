@@ -27,59 +27,13 @@ This branch adds a custom BLE Remote Control Service that enables the watch to s
 The base InfiniTime firmware runs on the nRF52832 SoC (ARM Cortex-M4) using FreeRTOS as its real-time operating system, with UI built on LVGL and BLE via NimBLE.
 
 ## Build Commands
-
-### Prerequisites
-- ARM-GCC toolchain (10.3-2021.10)
-- NRF52 SDK 15.3.0
-- CMake (3.16.5+)
-- Python 3 with modules: cbor, intelhex, click, cryptography
-- lv_font_conv (via npm) for font generation
-
-### Basic Build
+build using Docker like this:
 
 ```bash
-# Initial setup
-git submodule update --init
-mkdir -p build
-cd build
-
-# Configure with CMake (adjust paths as needed)
-cmake -DARM_NONE_EABI_TOOLCHAIN_PATH=/path/to/gcc-arm-none-eabi-10.3-2021.10/ \
-      -DNRF5_SDK_PATH=/path/to/nrf_sdk \
-      ..
-
-# Build the main application
-make -j4 pinetime-app
+docker run --rm -it -v ${PWD}:/sources infinitime-build
 ```
 
-### Build Targets
-
-- `pinetime-app` - Standalone firmware (most common for development)
-- `pinetime-mcuboot-app` - Firmware with bootloader support
-- `pinetime-recovery` - Minimal recovery firmware
-- `pinetime-recovery-loader` - Tool to flash recovery firmware
-
-### Build Options
-
-```bash
-# Debug build (binary may be too large for flash)
-cmake -DCMAKE_BUILD_TYPE=Debug ...
-
-# Build DFU files for OTA updates (requires adafruit-nrfutil)
-cmake -DBUILD_DFU=1 ...
-
-# Generate external resources (requires lv_font_conv and pillow)
-cmake -DBUILD_RESOURCES=1 ...
-
-# Select user apps to include
-cmake -DENABLE_USERAPPS="Apps::Alarm,Apps::Timer,Apps::HeartRate" ...
-
-# Select watch faces to include
-cmake -DENABLE_WATCHFACES="WatchFace::Digital,WatchFace::Analog" ...
-
-# Target device (default: PINETIME)
-cmake -DTARGET_DEVICE=PINETIME ...
-```
+results are stored in `build/output/`
 
 ### Code Quality
 
